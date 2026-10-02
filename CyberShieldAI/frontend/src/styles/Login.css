@@ -1,0 +1,372 @@
+/* ============================================================
+   CYBERSHIELD AI - LOGIN BACKGROUND
+   ============================================================ */
+
+.login-page {
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at 20% 20%,
+      rgba(0, 200, 255, 0.12),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 80% 70%,
+      rgba(120, 60, 255, 0.12),
+      transparent 30%
+    ),
+    #020617;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 40px 20px;
+}
+
+/* ============================================================
+   CYBER GRID
+   ============================================================ */
+
+.login-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background-image:
+    linear-gradient(
+      rgba(0, 200, 255, 0.035) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(0, 200, 255, 0.035) 1px,
+      transparent 1px
+    );
+
+  background-size: 50px 50px;
+
+  mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    black 20%,
+    black 80%,
+    transparent
+  );
+
+  animation: gridMove 15s linear infinite;
+
+  pointer-events: none;
+}
+
+@keyframes gridMove {
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: 50px 50px;
+  }
+}
+
+/* ============================================================
+   GLOWING ORBS
+   ============================================================ */
+
+.cyber-orb {
+  position: absolute;
+
+  border-radius: 50%;
+
+  filter: blur(70px);
+
+  pointer-events: none;
+
+  opacity: 0.5;
+}
+
+.cyber-orb-1 {
+  width: 300px;
+  height: 300px;
+
+  background: rgba(0, 200, 255, 0.18);
+
+  top: -100px;
+  left: -80px;
+
+  animation: floatOrb1 9s ease-in-out infinite;
+}
+
+.cyber-orb-2 {
+  width: 350px;
+  height: 350px;
+
+  background: rgba(100, 50, 255, 0.16);
+
+  right: -120px;
+  bottom: -120px;
+
+  animation: floatOrb2 11s ease-in-out infinite;
+}
+
+.cyber-orb-3 {
+  width: 180px;
+  height: 180px;
+
+  background: rgba(0, 255, 200, 0.08);
+
+  right: 20%;
+  top: 15%;
+
+  animation: floatOrb3 7s ease-in-out infinite;
+}
+
+@keyframes floatOrb1 {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  50% {
+    transform: translate(80px, 50px);
+  }
+}
+
+@keyframes floatOrb2 {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  50% {
+    transform: translate(-80px, -60px);
+  }
+}
+
+@keyframes floatOrb3 {
+  0%,
+  100% {
+    transform: translate(0, 0);
+    opacity: 0.3;
+  }
+
+  50% {
+    transform: translate(-40px, 60px);
+    opacity: 0.7;
+  }
+}
+
+/* ============================================================
+   PARTICLES
+   ============================================================ */
+
+.cyber-particles {
+  position: absolute;
+  inset: 0;
+
+  pointer-events: none;
+
+  background-image:
+    radial-gradient(
+      circle,
+      rgba(0, 220, 255, 0.5) 1px,
+      transparent 1px
+    );
+
+  background-size: 80px 80px;
+
+  animation: particlesMove 20s linear infinite;
+
+  opacity: 0.25;
+}
+
+@keyframes particlesMove {
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: 80px 80px;
+  }
+}
+
+/* ============================================================
+   SCAN LINE
+   ============================================================ */
+
+.cyber-scan-line {
+  position: absolute;
+
+  left: 0;
+  right: 0;
+
+  height: 1px;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 220, 255, 0.5),
+    transparent
+  );
+
+  box-shadow:
+    0 0 15px rgba(0, 220, 255, 0.4);
+
+  opacity: 0.35;
+
+  animation: scanLine 6s linear infinite;
+
+  pointer-events: none;
+}
+
+@keyframes scanLine {
+  0% {
+    top: -5%;
+  }
+
+  100% {
+    top: 105%;
+  }
+}
+
+/* ============================================================
+   CONTENT
+   ============================================================ */
+
+.login-content {
+  position: relative;
+  z-index: 10;
+
+  width: 100%;
+  max-width: 450px;
+}
+
+/* ============================================================
+   LOGO
+   ============================================================ */
+
+.login-logo {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.login-logo h1 {
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: -1px;
+
+  color: white;
+
+  text-shadow:
+    0 0 10px rgba(0, 220, 255, 0.2);
+}
+
+.login-logo h1 span {
+  color: #00c2e8;
+
+  text-shadow:
+    0 0 15px rgba(0, 220, 255, 0.5);
+}
+
+.login-logo p {
+  margin-top: 6px;
+
+  color: #94a3b8;
+
+  font-size: 15px;
+}
+
+/* ============================================================
+   LOGIN CARD
+   ============================================================ */
+
+.login-card {
+  position: relative;
+
+  background: rgba(15, 23, 42, 0.88);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  border: 1px solid rgba(0, 200, 255, 0.25);
+
+  border-radius: 16px;
+
+  padding: 32px;
+
+  box-shadow:
+    0 25px 60px rgba(0, 0, 0, 0.45),
+    0 0 40px rgba(0, 180, 255, 0.05);
+
+  animation: cardAppear 0.7s ease-out;
+}
+
+.login-card::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: 10%;
+  right: 10%;
+
+  height: 1px;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #00c2e8,
+    transparent
+  );
+
+  box-shadow:
+    0 0 15px rgba(0, 194, 232, 0.7);
+}
+
+@keyframes cardAppear {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media (max-width: 600px) {
+  .login-page {
+    padding: 25px 15px;
+  }
+
+  .login-logo h1 {
+    font-size: 30px;
+  }
+
+  .login-card {
+    padding: 24px;
+  }
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .login-page::before,
+  .cyber-particles,
+  .cyber-orb,
+  .cyber-scan-line,
+  .login-card {
+    animation: none;
+  }
+}
