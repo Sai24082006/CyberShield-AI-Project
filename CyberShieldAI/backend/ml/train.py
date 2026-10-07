@@ -8,11 +8,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import (
-    accuracy_score,
-    classification_report,
-    confusion_matrix
-)
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 
 from features import extract_features
 
@@ -55,57 +51,37 @@ print("\nLoading dataset...")
 df = pd.read_csv(DATASET_PATH)
 
 print("Dataset Loaded Successfully")
-print("Total Dataset Samples:", len(df))
+print("Original samples:", len(df))
 
-print("\nDataset columns:")
-print(df.columns.tolist())
+
+# ============================================================
+# CLEAN DATA
+# ============================================================
+
+print("\nCleaning dataset...")
+
+df = df.dropna(subset=["URL", "Label"])
+
+df["URL"] = df["URL"].astype(str).str.strip()
+df["Label"] = df["Label"].astype(str).str.strip().str.lower()
+
+# Remove empty URLs
+df = df[df["URL"] != ""]
+
+# Remove duplicate URLs
+df = df.drop_duplicates(subset=["URL"])
+
+# Keep only valid classes
+df = df[df["Label"].isin(["good", "bad"])]
+
+print("Clean unique samples:", len(df))
 
 print("\nLabel distribution:")
 print(df["Label"].value_counts())
 
 
 # ============================================================
-# REMOVE INVALID DATA
-# ============================================================
-
-df = df.dropna(subset=["URL", "Label"])
-
-df["URL"] = df["URL"].astype(str)
-df["Label"] = df["Label"].astype(str).str.strip()
-
-print("\nSamples after cleaning:", len(df))
-
-
-# ============================================================
-# SAMPLE DATA
-# ============================================================
-
-SAMPLE_SIZE = 100000
-
-if len(df) > SAMPLE_SIZE:
-
-    print(
-        f"\nDataset is larger than {SAMPLE_SIZE} samples."
-    )
-
-    print(
-        f"Using {SAMPLE_SIZE} random samples for training."
-    )
-
-    df = df.sample(
-        SAMPLE_SIZE,
-        random_state=42
-    )
-
-else:
-
-    print(
-        f"\nUsing all {len(df)} samples."
-    )
-
-
-# ============================================================
-# EXTRACT HANDCRAFTED FEATURES
+# EXTRACT FEATURES
 # ============================================================
 
 print("\nExtracting URL features...")
@@ -118,11 +94,10 @@ for i, url in enumerate(df["URL"]):
         extract_features(url)
     )
 
-    if (i + 1) % 10000 == 0:
+    if (i + 1) % 25000 == 0:
         print(
             f"Processed {i + 1} / {len(df)} URLs"
         )
-
 
 feature_df = pd.DataFrame(feature_rows)
 
@@ -155,6 +130,21 @@ NUMERIC_FEATURES = [
     "https",
     "has_ip",
     "subdomain_count",
+    "hostname_length",
+    "path_length",
+    "query_length",
+    "directory_count",
+    "has_at",
+    "has_question",
+    "has_equal",
+    "has_ampersand",
+    "has_percent",
+    "has_hash",
+    "num_at",
+    "num_question",
+    "num_equal",
+    "num_ampersand",
+    "num_percent",
     "suspicious_words",
 ]
 
@@ -189,15 +179,10 @@ print("Testing samples:", len(X_test))
 
 print("\nBuilding preprocessing pipeline...")
 
-
 preprocessor = ColumnTransformer(
-
     transformers=[
 
-        # ----------------------------------------------------
-        # CHARACTER-LEVEL TF-IDF
-        # ----------------------------------------------------
-
+        # Character-level URL patterns
         (
             "url_tfidf",
 
@@ -205,17 +190,14 @@ preprocessor = ColumnTransformer(
                 analyzer="char",
                 ngram_range=(3, 5),
                 min_df=2,
-                max_features=100000,
+                max_features=150000,
                 sublinear_tf=True
             ),
 
             "URL"
         ),
 
-        # ----------------------------------------------------
-        # NUMERICAL URL FEATURES
-        # ----------------------------------------------------
-
+        # Numeric URL features
         (
             "numeric_features",
 
@@ -232,15 +214,10 @@ preprocessor = ColumnTransformer(
 # ============================================================
 
 classifier = LogisticRegression(
-
     max_iter=1000,
-
     class_weight="balanced",
-
     solver="saga",
-
     random_state=42,
-
     n_jobs=-1
 )
 
@@ -261,15 +238,16 @@ model = Pipeline(
 
 
 # ============================================================
-# TRAIN
+# TRAIN MODEL
 # ============================================================
 
 print("\n" + "=" * 60)
 print("TRAINING MODEL")
 print("=" * 60)
 
-print("\nThis may take some time...")
-print("Please wait.\n")
+print("\nTraining on the cleaned dataset.")
+print("This may take several minutes.")
+print("Do not close the terminal.\n")
 
 
 model.fit(

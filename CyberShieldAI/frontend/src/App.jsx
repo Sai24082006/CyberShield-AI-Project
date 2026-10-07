@@ -11,6 +11,7 @@ import Profile from "./pages/Profile";
 import ChooseScanner from "./pages/ChooseScanner";
 import QRScanner from "./pages/QRScanner";
 import EmailScanner from "./pages/EmailScanner";
+import History from "./pages/History";
 
 // ============================================================
 // APP
@@ -21,19 +22,13 @@ function App() {
     <BrowserRouter>
       <Routes>
 
-        {/* ================================================== */}
         {/* DEFAULT */}
-        {/* ================================================== */}
-
         <Route
           path="/"
           element={<Navigate to="/login" replace />}
         />
 
-        {/* ================================================== */}
         {/* AUTHENTICATION */}
-        {/* ================================================== */}
-
         <Route
           path="/login"
           element={<Login />}
@@ -44,55 +39,43 @@ function App() {
           element={<Register />}
         />
 
-        {/* ================================================== */}
         {/* SCANNER SELECTION */}
-        {/* ================================================== */}
-
         <Route
           path="/choose-scanner"
           element={<ChooseScanner />}
         />
 
-        {/* ================================================== */}
-        {/* URL SCANNER / DASHBOARD */}
-        {/* ================================================== */}
-
+        {/* DASHBOARD */}
         <Route
           path="/dashboard"
           element={<Dashboard />}
         />
 
-        {/* ================================================== */}
         {/* QR SCANNER */}
-        {/* ================================================== */}
-
         <Route
           path="/qr-scanner"
           element={<QRScanner />}
         />
 
-        {/* ================================================== */}
         {/* EMAIL SCANNER */}
-        {/* ================================================== */}
-
         <Route
           path="/scan-email"
           element={<EmailScanner />}
         />
 
-        {/* ================================================== */}
-        {/* PROFILE */}
-        {/* ================================================== */}
+        {/* HISTORY */}
+        <Route
+          path="/history"
+          element={<History />}
+        />
 
+        {/* PROFILE */}
         <Route
           path="/profile"
           element={<Profile />}
         />
 
-        {/* ================================================== */}
         {/* UNKNOWN ROUTE */}
-        {/* ================================================== */}
-
         <Route
           path="*"
           element={<Navigate to="/login" replace />}

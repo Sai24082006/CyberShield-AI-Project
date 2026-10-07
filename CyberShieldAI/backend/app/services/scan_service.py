@@ -1,5 +1,4 @@
 from pathlib import Path
-from datetime import datetime, timezone
 
 import joblib
 import pandas as pd
@@ -32,18 +31,12 @@ print("Loading phishing detection model")
 print("Model path:", MODEL_PATH)
 print("==================================================")
 
-
 try:
-
     model = joblib.load(MODEL_PATH)
-
     print("Phishing model loaded successfully!")
-
 except Exception as e:
-
     print("ERROR loading phishing model:")
     print(str(e))
-
     model = None
 
 
@@ -55,9 +48,10 @@ async def scan_url(url: str, email: str = ""):
     """
     Analyze a URL using the CyberShield AI phishing model.
 
-    Used by:
-        1. Normal URL scanner
-        2. QR phishing scanner
+    Every successful scan is stored in scan_history with:
+        - URL
+        - Prediction
+        - Confidence
     """
 
     # --------------------------------------------------------
@@ -65,10 +59,7 @@ async def scan_url(url: str, email: str = ""):
     # --------------------------------------------------------
 
     if not url or not url.strip():
-
-        raise ValueError(
-            "URL cannot be empty."
-        )
+        raise ValueError("URL cannot be empty.")
 
     url = url.strip()
 
@@ -77,7 +68,6 @@ async def scan_url(url: str, email: str = ""):
     # --------------------------------------------------------
 
     if model is None:
-
         raise RuntimeError(
             "Phishing detection model is not loaded."
         )
@@ -124,11 +114,8 @@ async def scan_url(url: str, email: str = ""):
             "legitimate",
             "0"
         ]:
-
             result = "Safe"
-
         else:
-
             result = "Phishing"
 
         # ====================================================
@@ -138,7 +125,6 @@ async def scan_url(url: str, email: str = ""):
         confidence = 95.0
 
         try:
-
             if hasattr(model, "predict_proba"):
 
                 probabilities = model.predict_proba(
@@ -156,7 +142,8 @@ async def scan_url(url: str, email: str = ""):
                 str(e)
             )
 
-        # Keep confidence within 0-100
+        # Keep confidence between 0 and 100
+
         confidence = max(
             0.0,
             min(
@@ -172,16 +159,12 @@ async def scan_url(url: str, email: str = ""):
         try:
 
             history_document = {
-                "email": email,
                 "url": url,
                 "prediction": result,
-                "confidence": confidence,
-                "created_at": datetime.now(
-                    timezone.utc
-                )
+                "confidence": round(confidence, 2)
             }
 
-            await db.history.insert_one(
+            await db.scan_history.insert_one(
                 history_document
             )
 
