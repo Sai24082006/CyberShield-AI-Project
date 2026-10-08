@@ -13,6 +13,7 @@ from app.api.email import router as email_router
 
 import sys
 import ssl
+import socket
 import pymongo
 import certifi
 
@@ -24,7 +25,6 @@ app = FastAPI(
 )
 
 
-# CORS Configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -37,7 +37,6 @@ app.add_middleware(
 )
 
 
-# API Routers
 app.include_router(auth_router)
 app.include_router(profile_router)
 app.include_router(scan_router)
@@ -47,7 +46,6 @@ app.include_router(qr_router)
 app.include_router(email_router)
 
 
-# Root Endpoint
 @app.get("/")
 async def home():
     return {
@@ -57,7 +55,6 @@ async def home():
     }
 
 
-# Database Health Check
 @app.get("/db-check")
 async def db_check():
     try:
@@ -75,7 +72,6 @@ async def db_check():
         }
 
 
-# Temporary Render Environment Check
 @app.get("/env-check")
 async def env_check():
     return {
@@ -84,3 +80,38 @@ async def env_check():
         "pymongo": pymongo.version,
         "certifi": certifi.where()
     }
+
+
+@app.get("/tls-check")
+async def tls_check():
+    host = "ac-cojybyf-shard-00-00.yfpfs8p.mongodb.net"
+    port = 27017
+
+    try:
+        context = ssl.create_default_context(
+            cafile=certifi.where()
+        )
+
+        with socket.create_connection(
+            (host, port),
+            timeout=10
+        ) as sock:
+
+            with context.wrap_socket(
+                sock,
+                server_hostname=host
+            ) as tls_socket:
+
+                return {
+                    "status": "success",
+                    "message": "TLS connection successful",
+                    "tls_version": tls_socket.version(),
+                    "cipher": tls_socket.cipher()
+                }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "error_type": type(e).__name__,
+            "message": str(e)
+        }
