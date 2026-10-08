@@ -1,5 +1,6 @@
 from motor.motor_asyncio import AsyncIOMotorClient
 from dotenv import load_dotenv
+import certifi
 import os
 
 load_dotenv()
@@ -15,7 +16,10 @@ if not DATABASE_NAME:
 
 client = AsyncIOMotorClient(
     MONGODB_URL,
-    serverSelectionTimeoutMS=5000
+    tls=True,
+    tlsCAFile=certifi.where(),
+    serverSelectionTimeoutMS=10000,
+    connectTimeoutMS=10000,
 )
 
 db = client[DATABASE_NAME]
