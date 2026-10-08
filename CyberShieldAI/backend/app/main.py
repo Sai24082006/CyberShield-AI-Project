@@ -11,6 +11,11 @@ from app.api.dashboard import router as dashboard_router
 from app.api.qr import router as qr_router
 from app.api.email import router as email_router
 
+import sys
+import ssl
+import pymongo
+import certifi
+
 
 app = FastAPI(
     title="CyberShield AI",
@@ -47,7 +52,7 @@ app.include_router(email_router)
 async def home():
     return {
         "status": "success",
-        "message": "Welcome to CyberShield AI 🚀",
+        "message": "Welcome to CyberShield AI",
         "version": "1.0.0"
     }
 
@@ -60,7 +65,7 @@ async def db_check():
 
         return {
             "status": "success",
-            "message": "MongoDB Connected Successfully ✅"
+            "message": "MongoDB Connected Successfully"
         }
 
     except Exception as e:
@@ -68,3 +73,14 @@ async def db_check():
             "status": "error",
             "message": str(e)
         }
+
+
+# Temporary Render Environment Check
+@app.get("/env-check")
+async def env_check():
+    return {
+        "python": sys.version,
+        "openssl": ssl.OPENSSL_VERSION,
+        "pymongo": pymongo.version,
+        "certifi": certifi.where()
+    }
