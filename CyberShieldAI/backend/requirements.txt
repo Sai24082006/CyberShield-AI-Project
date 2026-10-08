@@ -45,3 +45,4 @@ wrapt==2.2.2
 tldextract
 opencv-python-headless
 certifi
+bcrypt==4.0.1
