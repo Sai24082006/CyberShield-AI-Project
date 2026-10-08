@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import API from "../services/api";
 
 function Login() {
   const navigate = useNavigate();
@@ -22,38 +23,34 @@ function Login() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: email,
-          password: password,
-        }),
+      const response = await API.post("/auth/login", {
+        email,
+        password,
       });
 
-      const data = await response.json();
+      const data = response.data;
 
-      if (!response.ok) {
-        throw new Error(data.detail || "Login failed");
+      if (data.status !== "success" || !data.access_token) {
+        throw new Error(data.message || "Login failed");
       }
 
-      // Store token
-      if (data.access_token) {
-        localStorage.setItem("token", data.access_token);
-      }
+      localStorage.setItem("token", data.access_token);
 
-      // Store user information if returned
       if (data.user) {
         localStorage.setItem("user", JSON.stringify(data.user));
       }
 
-      // Go to scanner selection
       navigate("/choose-scanner");
-
     } catch (err) {
-      setError(err.message || "Login failed. Please try again.");
+      console.error("Login error:", err);
+
+      const message =
+        err.response?.data?.detail ||
+        err.response?.data?.message ||
+        err.message ||
+        "Login failed. Please try again.";
+
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -62,16 +59,13 @@ function Login() {
   return (
     <div style={styles.page}>
 
-      {/* Animated background */}
       <div style={styles.grid}></div>
 
-      {/* Floating particles */}
       <div style={{ ...styles.particle, top: "15%", left: "10%" }}></div>
       <div style={{ ...styles.particle, top: "30%", left: "85%" }}></div>
       <div style={{ ...styles.particle, top: "70%", left: "15%" }}></div>
       <div style={{ ...styles.particle, top: "80%", left: "80%" }}></div>
 
-      {/* Logo */}
       <div style={styles.brand}>
         <h1>
           CyberShield<span>AI</span>
@@ -80,7 +74,6 @@ function Login() {
         <p>AI-Powered Phishing Detection</p>
       </div>
 
-      {/* Login Card */}
       <div style={styles.card}>
 
         <h2>Welcome Back</h2>
@@ -91,7 +84,6 @@ function Login() {
 
         <form onSubmit={handleLogin}>
 
-          {/* Email */}
           <label style={styles.label}>
             Email
           </label>
@@ -102,9 +94,9 @@ function Login() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             style={styles.input}
+            autoComplete="email"
           />
 
-          {/* Password */}
           <label style={styles.label}>
             Password
           </label>
@@ -115,16 +107,15 @@ function Login() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             style={styles.input}
+            autoComplete="current-password"
           />
 
-          {/* Error */}
           {error && (
             <div style={styles.error}>
               {error}
             </div>
           )}
 
-          {/* Login button */}
           <button
             type="submit"
             disabled={loading}
@@ -138,7 +129,6 @@ function Login() {
 
         </form>
 
-        {/* Register */}
         <div style={styles.register}>
           Don't have an account?
 
@@ -157,13 +147,7 @@ function Login() {
   );
 }
 
-
-/* ============================================================
-   STYLES
-============================================================ */
-
 const styles = {
-
   page: {
     minHeight: "100vh",
     width: "100%",
@@ -210,10 +194,6 @@ const styles = {
     textAlign: "center",
     marginTop: "25px",
     marginBottom: "30px",
-  },
-
-  brandTitle: {
-    fontSize: "42px",
   },
 
   card: {

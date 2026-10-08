@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import API from "../services/api";
 
 function Dashboard() {
   const [url, setUrl] = useState("");
@@ -25,41 +26,42 @@ function Dashboard() {
     setScanResult(null);
 
     try {
-      const response = await fetch(
-        "http://127.0.0.1:8000/scan/",
+      const response = await API.post(
+        "/scan/",
         {
-          method: "POST",
+          url: url.trim(),
+        },
+        {
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            url: url.trim(),
-          }),
         }
       );
 
-      const data = await response.json();
+      const data = response.data;
 
       console.log("Scan result:", data);
 
-      if (response.status === 401) {
+      setScanResult(data);
+    } catch (error) {
+      console.error("Scan error:", error);
+
+      if (error.response?.status === 401) {
         localStorage.removeItem("token");
+        localStorage.removeItem("user");
+
         alert("Session expired. Please login again.");
         navigate("/login");
         return;
       }
 
-      if (!response.ok) {
-        throw new Error(
-          data.detail || "URL scanning failed."
-        );
-      }
+      const message =
+        error.response?.data?.detail ||
+        error.response?.data?.message ||
+        error.message ||
+        "Something went wrong.";
 
-      setScanResult(data);
-    } catch (error) {
-      console.error("Scan error:", error);
-      alert(error.message || "Something went wrong.");
+      alert(message);
     } finally {
       setLoading(false);
     }
@@ -67,6 +69,7 @@ function Dashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     navigate("/login");
   };
 
@@ -79,21 +82,19 @@ function Dashboard() {
         fontFamily: "Arial, sans-serif",
       }}
     >
-      {/* NAVBAR */}
-
       <nav
         style={{
-          height: "80px",
+          minHeight: "80px",
           background: "#020617",
           borderBottom: "1px solid #1e293b",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "0 5%",
+          padding: "15px 5%",
+          gap: "20px",
+          flexWrap: "wrap",
         }}
       >
-        {/* LOGO */}
-
         <Link
           to="/choose-scanner"
           style={{
@@ -116,7 +117,7 @@ function Dashboard() {
               fontSize: "21px",
             }}
           >
-            🛡️
+            ???
           </div>
 
           <div>
@@ -140,13 +141,12 @@ function Dashboard() {
           </div>
         </Link>
 
-        {/* NAVIGATION */}
-
         <div
           style={{
             display: "flex",
             alignItems: "center",
             gap: "30px",
+            flexWrap: "wrap",
           }}
         >
           <Link
@@ -157,7 +157,7 @@ function Dashboard() {
               fontSize: "15px",
             }}
           >
-            🏠 Dashboard
+            ?? Dashboard
           </Link>
 
           <Link
@@ -168,7 +168,7 @@ function Dashboard() {
               fontSize: "15px",
             }}
           >
-            📜 History
+            ?? History
           </Link>
 
           <Link
@@ -179,7 +179,7 @@ function Dashboard() {
               fontSize: "15px",
             }}
           >
-            👤 Profile
+            ?? Profile
           </Link>
 
           <button
@@ -197,8 +197,6 @@ function Dashboard() {
         </div>
       </nav>
 
-      {/* MAIN */}
-
       <main
         style={{
           width: "90%",
@@ -215,14 +213,12 @@ function Dashboard() {
           }}
         >
           <h1 style={{ marginTop: 0 }}>
-            🔗 AI URL Scanner
+            ?? AI URL Scanner
           </h1>
 
           <p style={{ color: "#94a3b8" }}>
             Analyze a website URL for potential phishing threats.
           </p>
-
-          {/* URL INPUT */}
 
           <div
             style={{
@@ -273,8 +269,6 @@ function Dashboard() {
               {loading ? "Scanning..." : "Scan"}
             </button>
           </div>
-
-          {/* RESULT */}
 
           {scanResult && (
             <div
@@ -381,8 +375,6 @@ function Dashboard() {
                 </strong>
               </div>
 
-              {/* CONFIDENCE BAR */}
-
               <div
                 style={{
                   marginTop: "15px",
@@ -395,9 +387,7 @@ function Dashboard() {
                 <div
                   style={{
                     width: `${Math.min(
-                      Number(
-                        scanResult.confidence || 0
-                      ),
+                      Number(scanResult.confidence || 0),
                       100
                     )}%`,
                     height: "100%",

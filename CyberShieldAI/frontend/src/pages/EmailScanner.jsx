@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import API from "../services/api";
 
 function EmailScanner() {
   const navigate = useNavigate();
@@ -18,628 +19,327 @@ function EmailScanner() {
       return;
     }
 
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
     setLoading(true);
     setError("");
     setResult(null);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/email/scan", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      const response = await API.post(
+        "/email/scan",
+        {
           sender: sender,
           subject: subject,
           body: body,
-        }),
-      });
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-      const data = await response.json();
+      const data = response.data;
 
-      if (!response.ok) {
-        throw new Error(data.detail || "Email scanning failed.");
-      }
+      console.log("Email scan result:", data);
 
       setResult(data);
     } catch (err) {
-      setError(err.message || "Unable to connect to CyberShield AI.");
+      console.error("Email scan error:", err);
+
+      if (err.response?.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+
+        alert("Session expired. Please login again.");
+        navigate("/login");
+        return;
+      }
+
+      setError(
+        err.response?.data?.detail ||
+        err.response?.data?.message ||
+        err.message ||
+        "Unable to scan email."
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const clearAll = () => {
-    setSender("");
-    setSubject("");
-    setBody("");
-    setResult(null);
-    setError("");
-  };
-
   return (
-    <div style={styles.page}>
-      <div style={styles.container}>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#020617",
+        color: "#ffffff",
+        fontFamily: "Arial, sans-serif",
+        paddingBottom: "50px",
+      }}
+    >
+      {/* NAVBAR */}
 
-        {/* HEADER */}
-        <div style={styles.header}>
-          <button
-            onClick={() => navigate("/choose-scanner")}
-            style={styles.backButton}
-          >
-            ← Back
-          </button>
+      <nav
+        style={{
+          height: "80px",
+          background: "#020617",
+          borderBottom: "1px solid #1e293b",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 5%",
+        }}
+      >
+        <button
+          onClick={() => navigate("/choose-scanner")}
+          style={{
+            background: "none",
+            border: "none",
+            color: "#ffffff",
+            fontSize: "18px",
+            fontWeight: "bold",
+            cursor: "pointer",
+          }}
+        >
+          ??? CyberShieldAI
+        </button>
 
-          <div style={styles.logoSection}>
-            <div style={styles.logo}>🛡️</div>
+        <button
+          onClick={() => navigate("/choose-scanner")}
+          style={{
+            background: "none",
+            border: "none",
+            color: "#22d3ee",
+            cursor: "pointer",
+            fontSize: "15px",
+          }}
+        >
+          ? Back
+        </button>
+      </nav>
 
-            <div>
-              <h1 style={styles.title}>CyberShield AI</h1>
-              <p style={styles.subtitle}>Email Phishing Scanner</p>
-            </div>
-          </div>
-        </div>
+      {/* MAIN */}
 
-        {/* MAIN CARD */}
-        <div style={styles.card}>
+      <main
+        style={{
+          width: "90%",
+          maxWidth: "1000px",
+          margin: "50px auto",
+        }}
+      >
+        <section
+          style={{
+            background: "#111827",
+            border: "1px solid #155e75",
+            borderRadius: "16px",
+            padding: "30px",
+          }}
+        >
+          <h1 style={{ marginTop: 0 }}>
+            ?? Email Phishing Scanner
+          </h1>
 
-          <div style={styles.cardHeader}>
-            <div>
-              <h2 style={styles.cardTitle}>
-                📧 Analyze Suspicious Email
-              </h2>
-
-              <p style={styles.cardDescription}>
-                Check an email for common phishing indicators,
-                suspicious links, credential requests and financial scams.
-              </p>
-            </div>
-          </div>
+          <p style={{ color: "#94a3b8" }}>
+            Analyze an email for potential phishing threats.
+          </p>
 
           {/* SENDER */}
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>
-              Sender Email
-            </label>
 
-            <input
-              type="email"
-              placeholder="example@domain.com"
-              value={sender}
-              onChange={(e) => setSender(e.target.value)}
-              style={styles.input}
-            />
-          </div>
+          <label
+            style={{
+              display: "block",
+              marginTop: "25px",
+              marginBottom: "8px",
+              color: "#cbd5e1",
+            }}
+          >
+            Sender Email
+          </label>
+
+          <input
+            type="email"
+            value={sender}
+            onChange={(e) => setSender(e.target.value)}
+            placeholder="example@gmail.com"
+            style={{
+              width: "100%",
+              boxSizing: "border-box",
+              padding: "14px",
+              borderRadius: "10px",
+              border: "1px solid #334155",
+              background: "#1e293b",
+              color: "white",
+              outline: "none",
+            }}
+          />
 
           {/* SUBJECT */}
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>
-              Email Subject
-            </label>
 
-            <input
-              type="text"
-              placeholder="Enter email subject..."
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              style={styles.input}
-            />
-          </div>
+          <label
+            style={{
+              display: "block",
+              marginTop: "20px",
+              marginBottom: "8px",
+              color: "#cbd5e1",
+            }}
+          >
+            Email Subject
+          </label>
+
+          <input
+            type="text"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            placeholder="Enter email subject"
+            style={{
+              width: "100%",
+              boxSizing: "border-box",
+              padding: "14px",
+              borderRadius: "10px",
+              border: "1px solid #334155",
+              background: "#1e293b",
+              color: "white",
+              outline: "none",
+            }}
+          />
 
           {/* BODY */}
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>
-              Email Content
-            </label>
 
-            <textarea
-              placeholder="Paste the email content here..."
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              style={styles.textarea}
-            />
-          </div>
+          <label
+            style={{
+              display: "block",
+              marginTop: "20px",
+              marginBottom: "8px",
+              color: "#cbd5e1",
+            }}
+          >
+            Email Content
+          </label>
+
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder="Paste the email content here..."
+            style={{
+              width: "100%",
+              minHeight: "220px",
+              boxSizing: "border-box",
+              padding: "14px",
+              borderRadius: "10px",
+              border: "1px solid #334155",
+              background: "#1e293b",
+              color: "white",
+              outline: "none",
+              resize: "vertical",
+              fontFamily: "Arial, sans-serif",
+              lineHeight: "1.5",
+            }}
+          />
 
           {/* ERROR */}
+
           {error && (
-            <div style={styles.errorBox}>
-              ⚠️ {error}
+            <div
+              style={{
+                marginTop: "20px",
+                padding: "12px",
+                borderRadius: "8px",
+                background: "rgba(239,68,68,0.12)",
+                border: "1px solid rgba(239,68,68,0.4)",
+                color: "#f87171",
+              }}
+            >
+              {error}
             </div>
           )}
 
-          {/* BUTTONS */}
-          <div style={styles.buttonRow}>
+          {/* BUTTON */}
 
-            <button
-              onClick={scanEmail}
-              disabled={loading}
+          <button
+            onClick={scanEmail}
+            disabled={loading}
+            style={{
+              width: "100%",
+              marginTop: "25px",
+              padding: "15px",
+              border: "none",
+              borderRadius: "10px",
+              background: loading
+                ? "#475569"
+                : "#06b6d4",
+              color: "#ffffff",
+              fontSize: "16px",
+              fontWeight: "bold",
+              cursor: loading
+                ? "not-allowed"
+                : "pointer",
+            }}
+          >
+            {loading ? "Scanning Email..." : "Scan Email"}
+          </button>
+
+          {/* RESULT */}
+
+          {result && (
+            <div
               style={{
-                ...styles.scanButton,
-                opacity: loading ? 0.7 : 1,
+                marginTop: "30px",
+                padding: "25px",
+                borderRadius: "14px",
+                background: "#0f172a",
+                border: "1px solid #155e75",
               }}
             >
-              {loading ? "🔍 Scanning..." : "🔍 Scan Email"}
-            </button>
+              <h2>Scan Result</h2>
 
-            <button
-              onClick={clearAll}
-              style={styles.clearButton}
-            >
-              Clear
-            </button>
-
-          </div>
-        </div>
-
-        {/* RESULT */}
-        {result && (
-          <div style={styles.resultCard}>
-
-            <h2 style={styles.resultTitle}>
-              🛡️ Scan Result
-            </h2>
-
-            {/* PREDICTION */}
-            <div style={styles.resultGrid}>
-
-              <div style={styles.resultBox}>
-                <span style={styles.resultLabel}>
-                  Prediction
-                </span>
-
-                <span
-                  style={{
-                    ...styles.prediction,
-                    color:
-                      result.prediction === "Phishing"
-                        ? "#ff4d6d"
-                        : result.prediction === "Suspicious"
-                        ? "#ffb703"
-                        : "#00e676",
-                  }}
-                >
-                  {result.prediction}
-                </span>
-              </div>
-
-              {/* RISK */}
-              <div style={styles.resultBox}>
-                <span style={styles.resultLabel}>
-                  Risk Level
-                </span>
-
-                <span
-                  style={{
-                    ...styles.risk,
-                    color:
-                      result.risk_level === "High"
-                        ? "#ff4d6d"
-                        : result.risk_level === "Medium"
-                        ? "#ffb703"
-                        : "#00e676",
-                  }}
-                >
-                  {result.risk_level}
-                </span>
-              </div>
-
-              {/* CONFIDENCE */}
-              <div style={styles.resultBox}>
-                <span style={styles.resultLabel}>
-                  Confidence
-                </span>
-
-                <span style={styles.confidence}>
-                  {result.confidence}%
-                </span>
-              </div>
-            </div>
-
-            {/* MESSAGE */}
-            <div style={styles.messageBox}>
-              <h3 style={styles.sectionTitle}>
-                Analysis
-              </h3>
-
-              <p style={styles.message}>
-                {result.message}
-              </p>
-            </div>
-
-            {/* INDICATORS */}
-            {result.indicators && result.indicators.length > 0 && (
-              <div style={styles.indicatorSection}>
-
-                <h3 style={styles.sectionTitle}>
-                  ⚠️ Detected Indicators
-                </h3>
-
-                <div style={styles.indicatorList}>
-                  {result.indicators.map((indicator, index) => (
-                    <div
-                      key={index}
-                      style={styles.indicator}
-                    >
-                      <span style={styles.indicatorIcon}>
-                        ⚠
-                      </span>
-
-                      <span>
-                        {indicator}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-              </div>
-            )}
-
-            {/* URLS */}
-            {result.urls && result.urls.length > 0 && (
-              <div style={styles.urlSection}>
-
-                <h3 style={styles.sectionTitle}>
-                  🔗 URLs Detected
-                </h3>
-
-                {result.urls.map((url, index) => (
+              {Object.entries(result).map(
+                ([key, value]) => (
                   <div
-                    key={index}
-                    style={styles.urlBox}
+                    key={key}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      gap: "20px",
+                      padding: "12px 0",
+                      borderBottom:
+                        "1px solid #1e293b",
+                    }}
                   >
-                    {url}
+                    <span
+                      style={{
+                        color: "#94a3b8",
+                        textTransform: "capitalize",
+                      }}
+                    >
+                      {key.replace(/_/g, " ")}
+                    </span>
+
+                    <strong
+                      style={{
+                        color: "#22d3ee",
+                        textAlign: "right",
+                        wordBreak: "break-word",
+                      }}
+                    >
+                      {typeof value === "object"
+                        ? JSON.stringify(value)
+                        : String(value)}
+                    </strong>
                   </div>
-                ))}
-
-              </div>
-            )}
-
-            {/* ANALYSIS TYPE */}
-            {result.analysis_type && (
-              <div style={styles.analysisType}>
-                <span>
-                  Analysis Type:
-                </span>
-
-                <strong>
-                  {result.analysis_type}
-                </strong>
-              </div>
-            )}
-
-          </div>
-        )}
-
-        {/* FOOTER */}
-        <div style={styles.footer}>
-          <p>
-            🛡️ CyberShield AI • AI-Powered Phishing Detection
-          </p>
-        </div>
-
-      </div>
+                )
+              )}
+            </div>
+          )}
+        </section>
+      </main>
     </div>
   );
 }
-
-const styles = {
-  page: {
-    minHeight: "100vh",
-    background:
-      "linear-gradient(135deg, #020617 0%, #07152d 50%, #020617 100%)",
-    color: "#ffffff",
-    padding: "30px 20px",
-    fontFamily:
-      "Inter, Arial, Helvetica, sans-serif",
-  },
-
-  container: {
-    maxWidth: "950px",
-    margin: "0 auto",
-  },
-
-  header: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: "30px",
-    flexWrap: "wrap",
-    gap: "15px",
-  },
-
-  backButton: {
-    background: "rgba(255,255,255,0.06)",
-    border: "1px solid rgba(255,255,255,0.15)",
-    color: "#ffffff",
-    padding: "10px 18px",
-    borderRadius: "10px",
-    cursor: "pointer",
-    fontSize: "14px",
-  },
-
-  logoSection: {
-    display: "flex",
-    alignItems: "center",
-    gap: "12px",
-  },
-
-  logo: {
-    width: "48px",
-    height: "48px",
-    borderRadius: "14px",
-    background:
-      "linear-gradient(135deg, #00c6ff, #0072ff)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "25px",
-  },
-
-  title: {
-    margin: 0,
-    fontSize: "25px",
-    fontWeight: "700",
-  },
-
-  subtitle: {
-    margin: "3px 0 0",
-    color: "#94a3b8",
-    fontSize: "14px",
-  },
-
-  card: {
-    background: "rgba(15, 23, 42, 0.92)",
-    border:
-      "1px solid rgba(148,163,184,0.15)",
-    borderRadius: "18px",
-    padding: "30px",
-    boxShadow:
-      "0 20px 50px rgba(0,0,0,0.35)",
-  },
-
-  cardHeader: {
-    marginBottom: "25px",
-  },
-
-  cardTitle: {
-    margin: 0,
-    fontSize: "22px",
-  },
-
-  cardDescription: {
-    color: "#94a3b8",
-    fontSize: "14px",
-    lineHeight: "1.6",
-    marginTop: "8px",
-  },
-
-  inputGroup: {
-    marginBottom: "20px",
-  },
-
-  label: {
-    display: "block",
-    marginBottom: "8px",
-    fontSize: "14px",
-    fontWeight: "600",
-    color: "#e2e8f0",
-  },
-
-  input: {
-    width: "100%",
-    boxSizing: "border-box",
-    background: "#020617",
-    border:
-      "1px solid rgba(148,163,184,0.2)",
-    borderRadius: "10px",
-    padding: "13px 14px",
-    color: "#ffffff",
-    outline: "none",
-    fontSize: "14px",
-  },
-
-  textarea: {
-    width: "100%",
-    minHeight: "190px",
-    boxSizing: "border-box",
-    resize: "vertical",
-    background: "#020617",
-    border:
-      "1px solid rgba(148,163,184,0.2)",
-    borderRadius: "10px",
-    padding: "14px",
-    color: "#ffffff",
-    outline: "none",
-    fontSize: "14px",
-    lineHeight: "1.6",
-    fontFamily: "inherit",
-  },
-
-  errorBox: {
-    background:
-      "rgba(239,68,68,0.1)",
-    border:
-      "1px solid rgba(239,68,68,0.3)",
-    color: "#ff7b8f",
-    padding: "12px 15px",
-    borderRadius: "10px",
-    marginBottom: "20px",
-    fontSize: "14px",
-  },
-
-  buttonRow: {
-    display: "flex",
-    gap: "12px",
-    flexWrap: "wrap",
-  },
-
-  scanButton: {
-    flex: 1,
-    minWidth: "180px",
-    border: "none",
-    borderRadius: "10px",
-    padding: "14px 20px",
-    background:
-      "linear-gradient(135deg, #00c6ff, #0072ff)",
-    color: "#ffffff",
-    fontSize: "15px",
-    fontWeight: "700",
-    cursor: "pointer",
-  },
-
-  clearButton: {
-    border:
-      "1px solid rgba(148,163,184,0.25)",
-    borderRadius: "10px",
-    padding: "14px 25px",
-    background: "transparent",
-    color: "#cbd5e1",
-    fontSize: "15px",
-    cursor: "pointer",
-  },
-
-  resultCard: {
-    marginTop: "25px",
-    background: "rgba(15,23,42,0.95)",
-    border:
-      "1px solid rgba(0,198,255,0.18)",
-    borderRadius: "18px",
-    padding: "30px",
-    boxShadow:
-      "0 15px 40px rgba(0,0,0,0.3)",
-  },
-
-  resultTitle: {
-    marginTop: 0,
-    marginBottom: "25px",
-    fontSize: "21px",
-  },
-
-  resultGrid: {
-    display: "grid",
-    gridTemplateColumns:
-      "repeat(auto-fit, minmax(180px, 1fr))",
-    gap: "15px",
-  },
-
-  resultBox: {
-    background: "#020617",
-    borderRadius: "12px",
-    padding: "18px",
-    border:
-      "1px solid rgba(148,163,184,0.12)",
-    display: "flex",
-    flexDirection: "column",
-    gap: "8px",
-  },
-
-  resultLabel: {
-    color: "#94a3b8",
-    fontSize: "13px",
-  },
-
-  prediction: {
-    fontSize: "20px",
-    fontWeight: "700",
-  },
-
-  risk: {
-    fontSize: "20px",
-    fontWeight: "700",
-  },
-
-  confidence: {
-    color: "#38bdf8",
-    fontSize: "20px",
-    fontWeight: "700",
-  },
-
-  messageBox: {
-    marginTop: "20px",
-    padding: "18px",
-    background:
-      "rgba(56,189,248,0.06)",
-    border:
-      "1px solid rgba(56,189,248,0.12)",
-    borderRadius: "12px",
-  },
-
-  sectionTitle: {
-    margin: "0 0 10px",
-    fontSize: "16px",
-  },
-
-  message: {
-    margin: 0,
-    color: "#cbd5e1",
-    fontSize: "14px",
-    lineHeight: "1.6",
-  },
-
-  indicatorSection: {
-    marginTop: "25px",
-  },
-
-  indicatorList: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "10px",
-  },
-
-  indicator: {
-    display: "flex",
-    alignItems: "flex-start",
-    gap: "10px",
-    padding: "12px 14px",
-    background:
-      "rgba(255,77,109,0.06)",
-    border:
-      "1px solid rgba(255,77,109,0.12)",
-    borderRadius: "10px",
-    color: "#cbd5e1",
-    fontSize: "14px",
-    lineHeight: "1.5",
-  },
-
-  indicatorIcon: {
-    color: "#ff4d6d",
-    fontWeight: "bold",
-  },
-
-  urlSection: {
-    marginTop: "25px",
-  },
-
-  urlBox: {
-    background: "#020617",
-    border:
-      "1px solid rgba(148,163,184,0.15)",
-    borderRadius: "8px",
-    padding: "12px",
-    marginBottom: "8px",
-    color: "#38bdf8",
-    fontSize: "13px",
-    wordBreak: "break-all",
-  },
-
-  analysisType: {
-    marginTop: "25px",
-    paddingTop: "18px",
-    borderTop:
-      "1px solid rgba(148,163,184,0.12)",
-    color: "#64748b",
-    fontSize: "12px",
-    display: "flex",
-    gap: "6px",
-    flexWrap: "wrap",
-  },
-
-  footer: {
-    textAlign: "center",
-    marginTop: "30px",
-    color: "#64748b",
-    fontSize: "12px",
-  },
-};
 
 export default EmailScanner;

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import API from "../services/api";
 
 function Register() {
   const navigate = useNavigate();
@@ -48,29 +49,25 @@ function Register() {
       return;
     }
 
+    if (new TextEncoder().encode(formData.password).length > 72) {
+      setError("Password must be 72 bytes or fewer.");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const response = await fetch(
-        "http://127.0.0.1:8000/auth/register",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: formData.name,
-            email: formData.email,
-            password: formData.password,
-          }),
-        }
-      );
+      const response = await API.post("/auth/register", {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+      });
 
-      const data = await response.json();
+      const data = response.data;
 
-      if (!response.ok) {
+      if (data.status !== "success") {
         throw new Error(
-          data.detail || "Registration failed."
+          data.message || "Registration failed."
         );
       }
 
@@ -83,10 +80,14 @@ function Register() {
       }, 1200);
     } catch (err) {
       console.error("Registration error:", err);
-      setError(
+
+      const message =
+        err.response?.data?.detail ||
+        err.response?.data?.message ||
         err.message ||
-          "Unable to connect to the server."
-      );
+        "Unable to connect to the server.";
+
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -94,14 +95,11 @@ function Register() {
 
   return (
     <div className="auth-page">
-      {/* Background effects */}
 
       <div className="grid-background"></div>
 
       <div className="glow glow-one"></div>
       <div className="glow glow-two"></div>
-
-      {/* Brand */}
 
       <div className="brand">
         <h1>
@@ -111,9 +109,8 @@ function Register() {
         <p>AI-Powered Phishing Detection</p>
       </div>
 
-      {/* Register Card */}
-
       <div className="auth-card">
+
         <h2>Create Account</h2>
 
         <p className="subtitle">
@@ -121,7 +118,6 @@ function Register() {
         </p>
 
         <form onSubmit={handleRegister}>
-          {/* Name */}
 
           <label>Name</label>
 
@@ -134,8 +130,6 @@ function Register() {
             autoComplete="name"
           />
 
-          {/* Email */}
-
           <label>Email</label>
 
           <input
@@ -146,8 +140,6 @@ function Register() {
             onChange={handleChange}
             autoComplete="email"
           />
-
-          {/* Password */}
 
           <label>Password</label>
 
@@ -160,8 +152,6 @@ function Register() {
             autoComplete="new-password"
           />
 
-          {/* Confirm Password */}
-
           <label>Confirm Password</label>
 
           <input
@@ -173,23 +163,17 @@ function Register() {
             autoComplete="new-password"
           />
 
-          {/* Error */}
-
           {error && (
             <div className="error-message">
               {error}
             </div>
           )}
 
-          {/* Success */}
-
           {success && (
             <div className="success-message">
               {success}
             </div>
           )}
-
-          {/* Register */}
 
           <button
             type="submit"
@@ -199,9 +183,8 @@ function Register() {
               ? "Creating Account..."
               : "Create Account"}
           </button>
-        </form>
 
-        {/* Login */}
+        </form>
 
         <p className="login-link">
           Already have an account?{" "}
@@ -209,9 +192,8 @@ function Register() {
             Login
           </Link>
         </p>
-      </div>
 
-      {/* CSS */}
+      </div>
 
       <style>{`
         * {
@@ -236,8 +218,6 @@ function Register() {
           padding: 25px 20px 50px;
         }
 
-        /* Grid */
-
         .grid-background {
           position: fixed;
           inset: 0;
@@ -254,8 +234,6 @@ function Register() {
           background-size: 50px 50px;
           pointer-events: none;
         }
-
-        /* Glow */
 
         .glow {
           position: fixed;
@@ -278,8 +256,6 @@ function Register() {
           bottom: -120px;
           right: -100px;
         }
-
-        /* Brand */
 
         .brand {
           text-align: center;
@@ -305,8 +281,6 @@ function Register() {
           font-size: 15px;
         }
 
-        /* Card */
-
         .auth-card {
           width: 100%;
           max-width: 480px;
@@ -331,8 +305,6 @@ function Register() {
           color: #94a3b8;
           margin: 10px 0 25px;
         }
-
-        /* Form */
 
         form {
           display: flex;
@@ -368,8 +340,6 @@ function Register() {
             0 0 0 3px rgba(6, 182, 212, 0.1);
         }
 
-        /* Button */
-
         button {
           margin-top: 8px;
           width: 100%;
@@ -399,8 +369,6 @@ function Register() {
           box-shadow: none;
         }
 
-        /* Messages */
-
         .error-message {
           background: rgba(127, 29, 29, 0.25);
           border: 1px solid #7f1d1d;
@@ -420,8 +388,6 @@ function Register() {
           margin-bottom: 12px;
           font-size: 14px;
         }
-
-        /* Login link */
 
         .login-link {
           text-align: center;
